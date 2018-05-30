@@ -245,7 +245,7 @@ export default class StorageClass {
         if (!credentialsOK) { return Promise.reject('No credentials'); }
 
         const opt = Object.assign({}, this._options, options);
-        const { bucket, region, credentials, level, download, track } = opt;
+        const { bucket, region, credentials, level, download, track, marker } = opt;
 
         const prefix = this._prefix(opt);
         const final_path = prefix + path;
@@ -254,7 +254,8 @@ export default class StorageClass {
 
         const params = {
             Bucket: bucket,
-            Prefix: final_path
+            Prefix: final_path,
+            Marker: marker
         };
 
         return new Promise<any>((res, rej) => {
@@ -280,7 +281,7 @@ export default class StorageClass {
                         { method: 'list', result: 'success' },
                         null);
                     logger.debug('list', list);
-                    res(list);
+                    res({ list, nextMarker: data.NextMarker });
                 }
             });
         });
