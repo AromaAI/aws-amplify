@@ -262,7 +262,7 @@ var StorageClass = /** @class */ (function () {
      */
     StorageClass.prototype.list = function (path, options) {
         return __awaiter(this, void 0, void 0, function () {
-            var credentialsOK, opt, bucket, region, credentials, level, download, track, prefix, final_path, s3, params;
+            var credentialsOK, opt, bucket, region, credentials, level, download, track, marker, prefix, final_path, s3, params;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this._ensureCredentials()];
@@ -272,14 +272,15 @@ var StorageClass = /** @class */ (function () {
                             return [2 /*return*/, Promise.reject('No credentials')];
                         }
                         opt = Object.assign({}, this._options, options);
-                        bucket = opt.bucket, region = opt.region, credentials = opt.credentials, level = opt.level, download = opt.download, track = opt.track;
+                        bucket = opt.bucket, region = opt.region, credentials = opt.credentials, level = opt.level, download = opt.download, track = opt.track, marker = opt.marker;
                         prefix = this._prefix(opt);
                         final_path = prefix + path;
                         s3 = this._createS3(opt);
                         logger.debug('list ' + path + ' from ' + final_path);
                         params = {
                             Bucket: bucket,
-                            Prefix: final_path
+                            Prefix: final_path,
+                            Marker: marker
                         };
                         return [2 /*return*/, new Promise(function (res, rej) {
                                 s3.listObjects(params, function (err, data) {
@@ -297,6 +298,7 @@ var StorageClass = /** @class */ (function () {
                                                 size: item.Size
                                             };
                                         });
+                                        list.nextMarker = data.NextMarker;
                                         dispatchStorageEvent(track, { method: 'list', result: 'success' }, null);
                                         logger.debug('list', list);
                                         res(list);
@@ -335,8 +337,9 @@ var StorageClass = /** @class */ (function () {
     StorageClass.prototype._prefix = function (options) {
         var credentials = options.credentials, level = options.level;
         var customPrefix = options.customPrefix || {};
-        var privatePath = (customPrefix.private || 'private/') + credentials.identityId + '/';
-        var protectedPath = (customPrefix.protected || 'protected/') + credentials.identityId + '/';
+        var identityId = options.identityId || credentials.identityId;
+        var privatePath = (customPrefix.private || 'private/') + identityId + '/';
+        var protectedPath = (customPrefix.protected || 'protected/') + identityId + '/';
         var publicPath = customPrefix.public || 'public/';
         switch (level) {
             case 'private':
