@@ -268,7 +268,7 @@ export default class StorageClass {
                         null);
                     rej(err);
                 } else {
-                    const list = data.Contents.map(item => {
+                    const list:any = data.Contents.map(item => {
                         return {
                             key: item.Key.substr(prefix.length),
                             eTag: item.ETag,
@@ -276,12 +276,14 @@ export default class StorageClass {
                             size: item.Size
                         };
                     });
+                    list.nextMarker = data.NextMarker;
+
                     dispatchStorageEvent(
                         track,
                         { method: 'list', result: 'success' },
                         null);
                     logger.debug('list', list);
-                    res({ list, nextMarker: data.NextMarker });
+                    res(list);
                 }
             });
         });
